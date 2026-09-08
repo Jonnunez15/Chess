@@ -665,3 +665,119 @@ header{display:flex;align-items:center;gap:13px;padding:8px 2px 18px}.brand{widt
     font-size: 13px;
   }
 }
+/* =========================================================
+   GAME FILTER ROW
+   ========================================================= */
+
+.game-filter-bar {
+  display: flex;
+  gap: 8px;
+
+  margin: 18px 0 10px;
+
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+
+  scrollbar-width: none;
+}
+
+.game-filter-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.game-filter-btn {
+  flex: 0 0 auto;
+
+  background: #151b21;
+  color: #98a3b2;
+
+  border: 1px solid #34404d;
+  border-radius: 999px;
+
+  padding: 10px 16px;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.1s ease;
+}
+
+.game-filter-btn.active {
+  background: #95c23d;
+  color: #0c1116;
+  border-color: #95c23d;
+}
+
+.game-filter-btn:active {
+  transform: scale(0.97);
+}
+
+
+/* =========================================================
+   TIME CONTROL FILTER ROW
+   ========================================================= */
+
+.time-filter-bar {
+  display: flex;
+  gap: 8px;
+
+  margin: 0 0 24px;
+
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+
+  scrollbar-width: none;
+}
+
+.time-filter-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.time-filter-btn {
+  flex: 0 0 auto;
+
+  background: #151b21;
+  color: #98a3b2;
+
+  border: 1px solid #34404d;
+  border-radius: 999px;
+
+  padding: 10px 16px;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.1s ease;
+}
+
+.time-filter-btn.active {
+  background: #95c23d;
+  color: #0c1116;
+  border-color: #95c23d;
+}
+
+.time-filter-btn:active {
+  transform: scale(0.97);
+}
+
+
+@media (max-width: 600px) {
+
+  .game-filter-btn,
+  .time-filter-btn {
+    padding: 9px 14px;
+    font-size: 13px;
+  }
+}
