@@ -1460,14 +1460,6 @@ def biggest_upsets(rows):
 # ROUTES
 # =========================================================
 
-@app.route("/")
-def home():
-
-    return render_template(
-        "index.html"
-    )
-
-
 @app.route("/api/analytics")
 def analytics():
 
@@ -1476,11 +1468,27 @@ def analytics():
         "jonnunez152"
     ).strip()
 
+    game_filter = request.args.get(
+        "filter",
+        "all"
+    ).strip().lower()
+
     if not username:
 
         return jsonify({
             "error":
                 "Username is required"
+        }), 400
+
+    if game_filter not in {
+        "all",
+        "rated",
+        "unrated"
+    }:
+
+        return jsonify({
+            "error":
+                "Invalid game filter"
         }), 400
 
     try:
@@ -1494,12 +1502,34 @@ def analytics():
             username
         )
 
+        # =================================================
+        # FILTER RATED / UNRATED
+        # =================================================
+
+        if game_filter == "rated":
+
+            rows = [
+                g
+                for g in rows
+                if g["rated"] is True
+            ]
+
+        elif game_filter == "unrated":
+
+            rows = [
+                g
+                for g in rows
+                if g["rated"] is False
+            ]
+
+        # =================================================
+
         if not rows:
 
             return jsonify({
                 "error":
-                    "No public games found "
-                    "for that username"
+                    "No games found for "
+                    "that filter"
             }), 404
 
         total_record = game_record(
@@ -1518,6 +1548,9 @@ def analytics():
 
             "username":
                 username,
+
+            "filter":
+                game_filter,
 
             "totals":
                 total_record,
