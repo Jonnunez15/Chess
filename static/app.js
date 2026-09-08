@@ -1,4 +1,5 @@
 let DATA = null;
+let GAME_FILTER = 'all';
 
 const $ = s => document.querySelector(s);
 
