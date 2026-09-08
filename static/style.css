@@ -135,3 +135,160 @@ header{display:flex;align-items:center;gap:13px;padding:8px 2px 18px}.brand{widt
     font-size: 22px;
   }
 }
+.analytics-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  background: #151b21;
+  border: 1px solid #2c3540;
+  border-radius: 18px;
+
+  padding: 16px 18px;
+}
+
+.stat-row-name {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.stat-row-value {
+  flex: 0 0 auto;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.positive {
+  color: #95c23d !important;
+}
+
+.negative {
+  color: #e46f6f !important;
+}
+
+.analytics-note {
+  color: #7f8a98;
+  font-size: 12px;
+  margin-top: 10px;
+}
+
+.monthly-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.mini-heading {
+  margin: 0 0 10px;
+  font-size: 16px;
+}
+
+.month-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  background: #151b21;
+  border: 1px solid #2c3540;
+  border-radius: 16px;
+
+  padding: 14px;
+  margin-bottom: 9px;
+}
+
+.month-card strong {
+  display: block;
+}
+
+.month-card b {
+  flex: 0 0 auto;
+  font-size: 18px;
+}
+
+.single-feature {
+  margin-bottom: 14px;
+}
+
+.heatmap-shell {
+  background: #151b21;
+  border: 1px solid #2c3540;
+  border-radius: 22px;
+  padding: 18px;
+}
+
+.heatmap-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.heatmap-svg {
+  display: block;
+  min-width: 100%;
+}
+
+.heat-0 {
+  fill: #222a31;
+}
+
+.heat-1 {
+  fill: #354821;
+}
+
+.heat-2 {
+  fill: #577a2a;
+}
+
+.heat-3 {
+  fill: #79a935;
+}
+
+.heat-4 {
+  fill: #95c23d;
+}
+
+.heatmap-legend {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 5px;
+
+  color: #7f8a98;
+  font-size: 11px;
+
+  margin-top: 10px;
+}
+
+.heat-box {
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+@media (max-width: 600px) {
+
+  .monthly-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-row {
+    padding: 14px;
+  }
+
+  .stat-row-name {
+    font-size: 14px;
+  }
+
+  .stat-row-value {
+    font-size: 19px;
+  }
+}
