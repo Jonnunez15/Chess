@@ -53,7 +53,6 @@ def get_json(url, retries=5):
                 )
 
                 time.sleep(wait)
-
                 continue
 
             r.raise_for_status()
@@ -83,7 +82,6 @@ def get_json(url, retries=5):
 def load_games(username):
 
     username = username.lower()
-
     now = time.time()
 
     if username not in CACHE:
@@ -239,7 +237,6 @@ def classify(me_result, opp_result):
 def normalize(games, username):
 
     uname = username.lower()
-
     rows = []
 
     for g in games:
@@ -632,8 +629,6 @@ def rating_history(rows):
             g["local_date"]
         )
 
-        # Since rows are chronological,
-        # this becomes the final rating of the day.
         daily[key] = {
             "date":
                 g["local_date"],
@@ -1069,7 +1064,6 @@ def monthly_stats(rows):
             x["month"]
     )
 
-    # Avoid tiny partial months dominating.
     qualified = [
         x
         for x in months
@@ -1264,7 +1258,6 @@ def rating_moves_30_days(history):
         }
 
     all_gains = []
-
     all_drops = []
 
     for tc, value in results.items():
@@ -1460,6 +1453,14 @@ def biggest_upsets(rows):
 # ROUTES
 # =========================================================
 
+@app.route("/")
+def home():
+
+    return render_template(
+        "index.html"
+    )
+
+
 @app.route("/api/analytics")
 def analytics():
 
@@ -1503,7 +1504,7 @@ def analytics():
         )
 
         # =================================================
-        # FILTER RATED / UNRATED
+        # RATED / UNRATED FILTER
         # =================================================
 
         if game_filter == "rated":
@@ -1528,8 +1529,8 @@ def analytics():
 
             return jsonify({
                 "error":
-                    "No games found for "
-                    "that filter"
+                    "No games found "
+                    "for that filter"
             }), 404
 
         total_record = game_record(
