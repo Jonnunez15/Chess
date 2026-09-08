@@ -6,6 +6,7 @@ const status = $('#status');
 
 
 function metric(label, val) {
+
   return `
     <div class="metric">
       <b>${val}</b>
@@ -16,7 +17,10 @@ function metric(label, val) {
 
 
 function esc(s) {
-  return String(s ?? '').replace(
+
+  return String(
+    s ?? ''
+  ).replace(
     /[&<>"]/g,
     c => ({
       '&': '&amp;',
@@ -29,21 +33,59 @@ function esc(s) {
 
 
 function formatDate(s) {
+
   if (!s) return '—';
 
-  const parts = s.split('-');
+  const p = s.split('-');
 
-  return `${parts[1]}/${parts[2]}/${parts[0]}`;
+  return (
+    `${p[1]}/${p[2]}/${p[0]}`
+  );
+}
+
+
+function formatMonth(s) {
+
+  if (!s) return '—';
+
+  const [y, m] =
+    s.split('-');
+
+  const names = [
+    'Jan', 'Feb', 'Mar',
+    'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep',
+    'Oct', 'Nov', 'Dec'
+  ];
+
+  return (
+    `${names[Number(m) - 1]} ${y}`
+  );
+}
+
+
+function signed(n) {
+
+  if (n > 0) {
+    return `+${n}`;
+  }
+
+  return String(n);
 }
 
 
 async function load() {
 
-  const u = $('#username').value.trim();
+  const u =
+    $('#username')
+    .value
+    .trim();
 
   if (!u) {
+
     status.textContent =
       'Please enter a Chess.com username.';
+
     return;
   }
 
@@ -61,17 +103,23 @@ async function load() {
       '&_=' +
       Date.now();
 
-    const r = await fetch(url, {
-      method: 'GET',
-      cache: 'no-store',
-      headers: {
-        'Accept': 'application/json'
+    const r = await fetch(
+      url,
+      {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          Accept:
+            'application/json'
+        }
       }
-    });
+    );
 
-    const d = await r.json();
+    const d =
+      await r.json();
 
     if (!r.ok) {
+
       throw new Error(
         d.error ||
         `Unable to load games. HTTP ${r.status}`
@@ -80,7 +128,8 @@ async function load() {
 
     DATA = d;
 
-    const t = d.totals;
+    const t =
+      d.totals;
 
     $('#metrics').innerHTML =
       metric(
@@ -122,18 +171,21 @@ async function load() {
               </div>
 
               <div class="sub">
-                ${o.games.toLocaleString()} games
-                · Avg ${o.avg_opp_rating ?? '—'}
+                ${o.games.toLocaleString()}
+                games · Avg
+                ${o.avg_opp_rating ?? '—'}
               </div>
 
             </div>
 
             <div class="record">
+
               ${o.record}
 
               <small>
                 ${o.score_pct}% score
               </small>
+
             </div>
 
           </div>
@@ -145,10 +197,14 @@ async function load() {
     $('#oppSelect').innerHTML =
       d.opponents
       .map(
-        o =>
-          `<option value="${esc(o.opponent)}">
+        o => `
+          <option
+            value="${esc(o.opponent)}">
+
             ${esc(o.opponent)}
-          </option>`
+
+          </option>
+        `
       )
       .join('');
 
@@ -157,9 +213,9 @@ async function load() {
 
     renderExtraAnalytics();
 
-    $('#content').classList.remove(
-      'hidden'
-    );
+    $('#content')
+      .classList
+      .remove('hidden');
 
     status.textContent =
       `Loaded ${t.games.toLocaleString()} games for ${d.username}`;
@@ -181,7 +237,8 @@ async function load() {
 
   finally {
 
-    $('#loadBtn').disabled = false;
+    $('#loadBtn').disabled =
+      false;
 
   }
 }
@@ -239,9 +296,7 @@ function renderH2H() {
         l: 0,
         d: 0
       };
-
     }
-
 
     const x =
       grouped[g.time_class];
@@ -252,11 +307,8 @@ function renderH2H() {
       g.result.toLowerCase();
 
     if (result === 'w') x.w++;
-
     if (result === 'l') x.l++;
-
     if (result === 'd') x.d++;
-
   }
 
 
@@ -265,9 +317,11 @@ function renderH2H() {
     .map(
       ([k, v]) => `
         <div class="chip">
+
           ${esc(k)}
           ·
           ${v.w}-${v.l}-${v.d}
+
         </div>
       `
     )
@@ -285,14 +339,15 @@ function renderExtraAnalytics() {
   if (!area) {
 
     area =
-      document.createElement('div');
+      document.createElement(
+        'div'
+      );
 
     area.id =
       'extraAnalytics';
 
     $('#content')
       .appendChild(area);
-
   }
 
 
@@ -360,6 +415,195 @@ function renderExtraAnalytics() {
     <section class="analytics-section">
 
       <div class="section-label">
+        PEAKS
+      </div>
+
+      <h2>
+        Career-high ratings
+      </h2>
+
+      <div
+        id="peakRatings"
+        class="analytics-grid">
+      </div>
+
+    </section>
+
+
+    <section class="analytics-section">
+
+      <div class="section-label">
+        COLOR
+      </div>
+
+      <h2>
+        White vs Black
+      </h2>
+
+      <div
+        id="colorStats"
+        class="analytics-grid">
+      </div>
+
+    </section>
+
+
+    <section class="analytics-section">
+
+      <div class="section-label">
+        STREAKS
+      </div>
+
+      <h2>
+        Career streaks
+      </h2>
+
+      <div
+        id="streakStats"
+        class="analytics-grid">
+      </div>
+
+    </section>
+
+
+    <section class="analytics-section">
+
+      <div class="section-label">
+        FORM
+      </div>
+
+      <h2>
+        Recent form
+      </h2>
+
+      <div
+        id="recentForm"
+        class="analytics-grid">
+      </div>
+
+    </section>
+
+
+    <section class="analytics-section">
+
+      <div class="section-label">
+        MATCHUPS
+      </div>
+
+      <h2>
+        By rating difference
+      </h2>
+
+      <div
+        id="ratingDifference"
+        class="analytics-stack">
+      </div>
+
+    </section>
+
+
+    <section class="analytics-section">
+
+      <div class="section-label">
+        SCHEDULE
+      </div>
+
+      <h2>
+        Day-of-week performance
+      </h2>
+
+      <div
+        id="weekdayStats"
+        class="analytics-stack">
+      </div>
+
+    </section>
+
+
+    <section class="analytics-section">
+
+      <div class="section-label">
+        CLOCK
+      </div>
+
+      <h2>
+        Time-of-day performance
+      </h2>
+
+      <div
+        id="timeOfDay"
+        class="analytics-grid">
+      </div>
+
+      <div class="analytics-note">
+        Times shown in Eastern Time.
+      </div>
+
+    </section>
+
+
+    <section class="analytics-section">
+
+      <div class="section-label">
+        MONTHS
+      </div>
+
+      <h2>
+        Best & worst months
+      </h2>
+
+      <div
+        id="monthlyStats"
+        class="monthly-columns">
+      </div>
+
+    </section>
+
+
+    <section class="analytics-section">
+
+      <div class="section-label">
+        ACTIVITY
+      </div>
+
+      <h2>
+        Career activity
+      </h2>
+
+      <div
+        id="activitySummary"
+        class="analytics-grid single-feature">
+      </div>
+
+      <div
+        id="activityHeatmap"
+        class="heatmap-shell">
+      </div>
+
+    </section>
+
+
+    <section class="analytics-section">
+
+      <div class="section-label">
+        MOMENTUM
+      </div>
+
+      <h2>
+        30-day rating swings
+      </h2>
+
+      <div
+        id="ratingMoves"
+        class="analytics-grid">
+      </div>
+
+    </section>
+
+
+    <section class="analytics-section">
+
+      <div class="section-label">
         RIVALS
       </div>
 
@@ -392,14 +636,19 @@ function renderExtraAnalytics() {
 
 
   renderTimeControlAnalytics();
-
+  renderRatingChart('blitz');
+  renderPeakRatings();
+  renderColorStats();
+  renderStreaks();
+  renderRecentForm();
+  renderRatingDifference();
+  renderWeekdays();
+  renderTimeOfDay();
+  renderMonths();
+  renderActivity();
+  renderRatingMoves();
   renderRivals();
-
   renderUpsets();
-
-  renderRatingChart(
-    'blitz'
-  );
 
 
   document
@@ -441,11 +690,8 @@ function renderExtraAnalytics() {
 
 function renderTimeControlAnalytics() {
 
-  const el =
-    $('#timeControlAnalytics');
-
-
-  el.innerHTML =
+  $('#timeControlAnalytics')
+    .innerHTML =
     DATA.time_controls
     .map(
       x => `
@@ -465,26 +711,668 @@ function renderTimeControlAnalytics() {
           </span>
 
           <div class="analytics-detail">
-
             ${x.record}
             ·
             ${x.score_pct}% score
-
           </div>
 
           <div class="analytics-detail">
-
             Peak:
             ${x.peak_rating ?? '—'}
-
           </div>
 
         </div>
-
       `
     )
     .join('');
+}
 
+
+function renderPeakRatings() {
+
+  const p =
+    DATA.peak_ratings;
+
+  const labels = [
+    ['blitz', 'Blitz'],
+    ['rapid', 'Rapid'],
+    ['bullet', 'Bullet']
+  ];
+
+  $('#peakRatings').innerHTML =
+    labels
+    .map(
+      ([key, label]) => {
+
+        const x = p[key];
+
+        if (!x) return '';
+
+        return `
+          <div class="analytics-card">
+
+            <div class="analytics-card-title">
+              ${label}
+            </div>
+
+            <b>
+              ${x.rating.toLocaleString()}
+            </b>
+
+            <span>
+              peak rating
+            </span>
+
+            <div class="analytics-detail">
+              ${formatDate(x.date)}
+            </div>
+
+          </div>
+        `;
+      }
+    )
+    .join('');
+}
+
+
+function renderColorStats() {
+
+  const c =
+    DATA.color_stats;
+
+  $('#colorStats').innerHTML =
+    [
+      ['♙ White', c.white],
+      ['♟ Black', c.black]
+    ]
+    .map(
+      ([label, x]) => `
+
+        <div class="analytics-card">
+
+          <div class="analytics-card-title">
+            ${label}
+          </div>
+
+          <b>
+            ${x.score_pct}%
+          </b>
+
+          <span>
+            score
+          </span>
+
+          <div class="analytics-detail">
+            ${x.games.toLocaleString()} games
+          </div>
+
+          <div class="analytics-detail">
+            ${x.record}
+          </div>
+
+        </div>
+      `
+    )
+    .join('');
+}
+
+
+function renderStreaks() {
+
+  const s =
+    DATA.streaks;
+
+  const items = [
+    [
+      '🔥 Win streak',
+      s.wins
+    ],
+    [
+      '🧊 Losing streak',
+      s.losses
+    ],
+    [
+      '🛡️ Unbeaten streak',
+      s.unbeaten
+    ]
+  ];
+
+  $('#streakStats').innerHTML =
+    items
+    .map(
+      ([title, x]) => `
+
+        <div class="analytics-card">
+
+          <div class="analytics-card-title">
+            ${title}
+          </div>
+
+          <b>
+            ${x.games}
+          </b>
+
+          <span>
+            games
+          </span>
+
+          <div class="analytics-detail">
+            ${formatDate(x.start_date)}
+            –
+            ${formatDate(x.end_date)}
+          </div>
+
+        </div>
+      `
+    )
+    .join('');
+}
+
+
+function renderRecentForm() {
+
+  const f =
+    DATA.recent_form;
+
+  $('#recentForm').innerHTML =
+    ['10', '25', '50', '100']
+    .map(
+      n => {
+
+        const x = f[n];
+
+        const cls =
+          x.vs_career > 0
+            ? 'positive'
+            : (
+              x.vs_career < 0
+                ? 'negative'
+                : ''
+            );
+
+        return `
+          <div class="analytics-card">
+
+            <div class="analytics-card-title">
+              Last ${n}
+            </div>
+
+            <b>
+              ${x.score_pct}%
+            </b>
+
+            <span>
+              score
+            </span>
+
+            <div class="analytics-detail">
+              ${x.record}
+            </div>
+
+            <div class="analytics-detail ${cls}">
+              ${signed(x.vs_career)}
+              pts vs career
+            </div>
+
+          </div>
+        `;
+      }
+    )
+    .join('');
+}
+
+
+function horizontalRow(
+  label,
+  games,
+  score,
+  record
+) {
+
+  return `
+    <div class="stat-row">
+
+      <div>
+
+        <div class="stat-row-name">
+          ${esc(label)}
+        </div>
+
+        <div class="sub">
+          ${games.toLocaleString()} games
+          ·
+          ${record}
+        </div>
+
+      </div>
+
+      <div class="stat-row-value">
+        ${score}%
+      </div>
+
+    </div>
+  `;
+}
+
+
+function renderRatingDifference() {
+
+  $('#ratingDifference')
+    .innerHTML =
+    DATA.rating_difference
+    .map(
+      x =>
+        horizontalRow(
+          x.bucket,
+          x.games,
+          x.score_pct,
+          x.record
+        )
+    )
+    .join('');
+}
+
+
+function renderWeekdays() {
+
+  $('#weekdayStats')
+    .innerHTML =
+    DATA.weekday_stats
+    .map(
+      x =>
+        horizontalRow(
+          x.day,
+          x.games,
+          x.score_pct,
+          x.record
+        )
+    )
+    .join('');
+}
+
+
+function renderTimeOfDay() {
+
+  $('#timeOfDay')
+    .innerHTML =
+    DATA.time_of_day
+    .map(
+      x => `
+
+        <div class="analytics-card">
+
+          <div class="analytics-card-title">
+            ${esc(x.period)}
+          </div>
+
+          <b>
+            ${x.score_pct}%
+          </b>
+
+          <span>
+            score
+          </span>
+
+          <div class="analytics-detail">
+            ${x.games.toLocaleString()} games
+          </div>
+
+          <div class="analytics-detail">
+            ${x.record}
+          </div>
+
+        </div>
+      `
+    )
+    .join('');
+}
+
+
+function renderMonths() {
+
+  const m =
+    DATA.monthly_stats;
+
+  const list = (
+    title,
+    data
+  ) => `
+
+    <div>
+
+      <h3 class="mini-heading">
+        ${title}
+      </h3>
+
+      ${data.map(
+        (x, i) => `
+
+          <div class="month-card">
+
+            <div>
+              <strong>
+                ${i + 1}.
+                ${formatMonth(x.month)}
+              </strong>
+
+              <div class="sub">
+                ${x.games.toLocaleString()}
+                games ·
+                ${x.record}
+              </div>
+            </div>
+
+            <b>
+              ${x.score_pct}%
+            </b>
+
+          </div>
+        `
+      ).join('')}
+
+    </div>
+  `;
+
+  $('#monthlyStats').innerHTML =
+    list(
+      'Best',
+      m.best
+    ) +
+    list(
+      'Worst',
+      m.worst
+    );
+}
+
+
+function renderActivity() {
+
+  const a =
+    DATA.activity;
+
+  const busiest =
+    a.busiest_day;
+
+  $('#activitySummary').innerHTML =
+    busiest
+      ? `
+        <div class="analytics-card">
+
+          <div class="analytics-card-title">
+            Busiest day
+          </div>
+
+          <b>
+            ${busiest.games}
+          </b>
+
+          <span>
+            games played
+          </span>
+
+          <div class="analytics-detail">
+            ${formatDate(busiest.date)}
+          </div>
+
+        </div>
+      `
+      : '';
+
+
+  if (!a.days.length) {
+
+    $('#activityHeatmap')
+      .innerHTML =
+      '<div class="sub">No activity data.</div>';
+
+    return;
+  }
+
+
+  const map =
+    new Map(
+      a.days.map(
+        x => [
+          x.date,
+          x.games
+        ]
+      )
+    );
+
+
+  const first =
+    new Date(
+      a.days[0].date +
+      'T12:00:00'
+    );
+
+  const last =
+    new Date(
+      a.days[
+        a.days.length - 1
+      ].date +
+      'T12:00:00'
+    );
+
+
+  const start =
+    new Date(first);
+
+  const startDay =
+    (start.getDay() + 6) % 7;
+
+  start.setDate(
+    start.getDate()
+    - startDay
+  );
+
+
+  const end =
+    new Date(last);
+
+  const endDay =
+    (end.getDay() + 6) % 7;
+
+  end.setDate(
+    end.getDate()
+    + (6 - endDay)
+  );
+
+
+  const maxGames =
+    Math.max(
+      ...a.days.map(
+        x => x.games
+      )
+    );
+
+
+  let cells = '';
+
+  let current =
+    new Date(start);
+
+  let week = 0;
+
+
+  while (current <= end) {
+
+    const day =
+      (current.getDay() + 6) % 7;
+
+    const date =
+      current
+      .toISOString()
+      .slice(0, 10);
+
+    const games =
+      map.get(date) || 0;
+
+    let level = 0;
+
+    if (games > 0) {
+
+      const ratio =
+        games / maxGames;
+
+      if (ratio > 0.75) level = 4;
+      else if (ratio > 0.5) level = 3;
+      else if (ratio > 0.25) level = 2;
+      else level = 1;
+    }
+
+
+    cells += `
+      <rect
+        x="${week * 14}"
+        y="${day * 14}"
+        width="11"
+        height="11"
+        rx="2"
+        class="heat-${level}">
+
+        <title>
+          ${date}: ${games} games
+        </title>
+
+      </rect>
+    `;
+
+
+    if (day === 6) {
+      week++;
+    }
+
+
+    current.setDate(
+      current.getDate() + 1
+    );
+  }
+
+
+  const width =
+    Math.max(
+      1,
+      (week + 1) * 14
+    );
+
+
+  $('#activityHeatmap')
+    .innerHTML = `
+
+      <div class="heatmap-scroll">
+
+        <svg
+          class="heatmap-svg"
+          viewBox="0 0 ${width} 100"
+          width="${width}"
+          height="100">
+
+          ${cells}
+
+        </svg>
+
+      </div>
+
+      <div class="heatmap-legend">
+
+        Less
+
+        <span class="heat-box heat-1"></span>
+        <span class="heat-box heat-2"></span>
+        <span class="heat-box heat-3"></span>
+        <span class="heat-box heat-4"></span>
+
+        More
+
+      </div>
+    `;
+}
+
+
+function renderRatingMoves() {
+
+  const x =
+    DATA.rating_moves_30;
+
+  const cards = [];
+
+
+  if (x.biggest_gain) {
+
+    cards.push(
+      `
+        <div class="analytics-card">
+
+          <div class="analytics-card-title">
+            📈 Biggest 30-day climb
+          </div>
+
+          <b class="positive">
+            +${x.biggest_gain.change}
+          </b>
+
+          <span>
+            ${esc(x.biggest_gain.time_class)}
+          </span>
+
+          <div class="analytics-detail">
+            ${x.biggest_gain.start_rating}
+            →
+            ${x.biggest_gain.end_rating}
+          </div>
+
+          <div class="analytics-detail">
+            ${formatDate(x.biggest_gain.start_date)}
+            →
+            ${formatDate(x.biggest_gain.end_date)}
+          </div>
+
+        </div>
+      `
+    );
+  }
+
+
+  if (x.biggest_drop) {
+
+    cards.push(
+      `
+        <div class="analytics-card">
+
+          <div class="analytics-card-title">
+            📉 Biggest 30-day drop
+          </div>
+
+          <b class="negative">
+            ${x.biggest_drop.change}
+          </b>
+
+          <span>
+            ${esc(x.biggest_drop.time_class)}
+          </span>
+
+          <div class="analytics-detail">
+            ${x.biggest_drop.start_rating}
+            →
+            ${x.biggest_drop.end_rating}
+          </div>
+
+          <div class="analytics-detail">
+            ${formatDate(x.biggest_drop.start_date)}
+            →
+            ${formatDate(x.biggest_drop.end_date)}
+          </div>
+
+        </div>
+      `
+    );
+  }
+
+
+  $('#ratingMoves')
+    .innerHTML =
+    cards.join('');
 }
 
 
@@ -494,71 +1382,78 @@ function renderRivals() {
     DATA.rivals;
 
   const cards = [
-
     {
-      title: '😈 Nemesis',
-      data: r.nemesis
+      title:
+        '😈 Nemesis',
+
+      data:
+        r.nemesis
     },
-
     {
-      title: '🥊 Punching Bag',
-      data: r.punching_bag
+      title:
+        '🥊 Punching Bag',
+
+      data:
+        r.punching_bag
     },
-
     {
-      title: '⚔️ Closest Rival',
-      data: r.closest_rival
+      title:
+        '⚔️ Closest Rival',
+
+      data:
+        r.closest_rival
     }
-
   ];
 
 
-  $('#rivalCards').innerHTML =
+  $('#rivalCards')
+    .innerHTML =
     cards
-    .map(item => {
+    .map(
+      item => {
 
-      const x =
-        item.data;
+        const x =
+          item.data;
 
-      if (!x) return '';
+        if (!x) return '';
 
-      return `
+        return `
 
-        <div class="analytics-card">
+          <div class="analytics-card">
 
-          <div class="analytics-card-title">
-            ${item.title}
+            <div class="analytics-card-title">
+              ${item.title}
+            </div>
+
+            <b class="rival-name">
+              ${esc(x.opponent)}
+            </b>
+
+            <span>
+              ${x.games.toLocaleString()}
+              games
+            </span>
+
+            <div class="analytics-detail">
+              ${x.record}
+            </div>
+
+            <div class="analytics-detail">
+              ${x.score_pct}% score
+            </div>
+
           </div>
-
-          <b class="rival-name">
-            ${esc(x.opponent)}
-          </b>
-
-          <span>
-            ${x.games.toLocaleString()} games
-          </span>
-
-          <div class="analytics-detail">
-            ${x.record}
-          </div>
-
-          <div class="analytics-detail">
-            ${x.score_pct}% score
-          </div>
-
-        </div>
-
-      `;
-
-    })
+        `;
+      }
+    )
     .join('');
-
 }
 
 
 function renderUpsets() {
 
-  $('#upsetList').innerHTML =
+  $('#upsetList')
+    .innerHTML =
     DATA.biggest_upsets
     .map(
       (g, i) => `
@@ -602,11 +1497,9 @@ function renderUpsets() {
           </div>
 
         </div>
-
       `
     )
     .join('');
-
 }
 
 
@@ -630,13 +1523,11 @@ function renderRatingChart(
       '<div class="sub">Not enough rating history.</div>';
 
     return;
-
   }
 
 
   const width = 700;
   const height = 280;
-
   const pad = 35;
 
 
@@ -647,13 +1538,18 @@ function renderRatingChart(
 
 
   let min =
-    Math.min(...ratings);
+    Math.min(
+      ...ratings
+    );
 
   let max =
-    Math.max(...ratings);
+    Math.max(
+      ...ratings
+    );
 
 
   if (min === max) {
+
     min -= 50;
     max += 50;
   }
@@ -664,14 +1560,17 @@ function renderRatingChart(
 
 
   const points =
-    data.map(
+    data
+    .map(
       (d, i) => {
 
         const x =
           pad +
           (
             i /
-            (data.length - 1)
+            (
+              data.length - 1
+            )
           ) *
           (
             width -
@@ -684,18 +1583,19 @@ function renderRatingChart(
           (
             (
               d.rating - min
-            ) /
+            )
+            /
             (
               max - min
             )
-          ) *
+          )
+          *
           (
             height -
             pad * 2
           );
 
         return `${x},${y}`;
-
       }
     )
     .join(' ');
@@ -758,9 +1658,7 @@ function renderRatingChart(
       </text>
 
     </svg>
-
   `;
-
 }
 
 
@@ -779,7 +1677,6 @@ $('#username')
       if (e.key === 'Enter') {
         load();
       }
-
     }
   );
 
