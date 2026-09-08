@@ -292,3 +292,376 @@ header{display:flex;align-items:center;gap:13px;padding:8px 2px 18px}.brand{widt
     font-size: 19px;
   }
 }
+
+/* =========================================================
+   ALL / RATED / UNRATED FILTER
+   ========================================================= */
+
+.game-filter-bar {
+  display: flex;
+  gap: 8px;
+  margin: 18px 0 22px;
+
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+
+  scrollbar-width: none;
+}
+
+.game-filter-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.game-filter-btn {
+  flex: 0 0 auto;
+
+  background: #151b21;
+  color: #98a3b2;
+
+  border: 1px solid #34404d;
+  border-radius: 999px;
+
+  padding: 10px 16px;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.1s ease;
+}
+
+.game-filter-btn.active {
+  background: #95c23d;
+  color: #0c1116;
+  border-color: #95c23d;
+}
+
+.game-filter-btn:active {
+  transform: scale(0.97);
+}
+
+
+/* =========================================================
+   ANALYTICS LAYOUT
+   ========================================================= */
+
+.analytics-section {
+  margin-top: 56px;
+}
+
+.analytics-section h2 {
+  margin: 6px 0 20px;
+  font-size: 28px;
+}
+
+.section-label {
+  color: #95c23d;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.analytics-card {
+  background: #151b21;
+  border: 1px solid #2c3540;
+  border-radius: 22px;
+  padding: 22px;
+  min-width: 0;
+}
+
+.analytics-card-title {
+  color: #98a3b2;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.analytics-card b {
+  display: block;
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+.analytics-card span {
+  display: block;
+  color: #98a3b2;
+  margin-top: 5px;
+}
+
+.analytics-detail {
+  color: #98a3b2;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.analytics-note {
+  color: #7f8a98;
+  font-size: 12px;
+  margin-top: 10px;
+}
+
+.rival-name {
+  overflow-wrap: anywhere;
+}
+
+
+/* =========================================================
+   RATING CHART
+   ========================================================= */
+
+.chart-box {
+  background: #151b21;
+  border: 1px solid #2c3540;
+  border-radius: 22px;
+  padding: 18px;
+}
+
+.chart-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.chart-tab {
+  border: 1px solid #34404d;
+  background: #10161b;
+  color: #9ca7b5;
+  border-radius: 999px;
+  padding: 8px 15px;
+  font-weight: 700;
+}
+
+.chart-tab.active {
+  background: #95c23d;
+  color: #0c1116;
+  border-color: #95c23d;
+}
+
+.rating-svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.rating-line {
+  fill: none;
+  stroke: #95c23d;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.chart-axis {
+  stroke: #34404d;
+  stroke-width: 1;
+}
+
+.chart-text {
+  fill: #8e99a7;
+  font-size: 12px;
+}
+
+
+/* =========================================================
+   STACKED ANALYTICS ROWS
+   ========================================================= */
+
+.analytics-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  background: #151b21;
+  border: 1px solid #2c3540;
+  border-radius: 18px;
+
+  padding: 16px 18px;
+}
+
+.stat-row-name {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.stat-row-value {
+  flex: 0 0 auto;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.positive {
+  color: #95c23d !important;
+}
+
+.negative {
+  color: #e46f6f !important;
+}
+
+.record.upset {
+  color: #95c23d;
+}
+
+
+/* =========================================================
+   MONTHS
+   ========================================================= */
+
+.monthly-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.mini-heading {
+  margin: 0 0 10px;
+  font-size: 16px;
+}
+
+.month-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  background: #151b21;
+  border: 1px solid #2c3540;
+  border-radius: 16px;
+
+  padding: 14px;
+  margin-bottom: 9px;
+}
+
+.month-card strong {
+  display: block;
+}
+
+.month-card b {
+  flex: 0 0 auto;
+  font-size: 18px;
+}
+
+
+/* =========================================================
+   ACTIVITY HEATMAP
+   ========================================================= */
+
+.single-feature {
+  margin-bottom: 14px;
+}
+
+.heatmap-shell {
+  background: #151b21;
+  border: 1px solid #2c3540;
+  border-radius: 22px;
+  padding: 18px;
+}
+
+.heatmap-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.heatmap-svg {
+  display: block;
+  min-width: 100%;
+}
+
+.heat-0 {
+  fill: #222a31;
+}
+
+.heat-1 {
+  fill: #354821;
+}
+
+.heat-2 {
+  fill: #577a2a;
+}
+
+.heat-3 {
+  fill: #79a935;
+}
+
+.heat-4 {
+  fill: #95c23d;
+}
+
+.heatmap-legend {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 5px;
+
+  color: #7f8a98;
+  font-size: 11px;
+
+  margin-top: 10px;
+}
+
+.heat-box {
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+
+  .analytics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .analytics-card {
+    padding: 18px;
+  }
+
+  .analytics-card b {
+    font-size: 22px;
+  }
+
+  .monthly-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-row {
+    padding: 14px;
+  }
+
+  .stat-row-name {
+    font-size: 14px;
+  }
+
+  .stat-row-value {
+    font-size: 19px;
+  }
+
+  .game-filter-btn {
+    padding: 9px 14px;
+    font-size: 13px;
+  }
+}
