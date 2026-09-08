@@ -90,8 +90,14 @@ async function load() {
     return;
   }
 
+  const filterNames = {
+    all: 'all games',
+    rated: 'rated games',
+    unrated: 'unrated games'
+  };
+
   status.textContent =
-    `Loading games for ${u}…`;
+    `Loading ${filterNames[GAME_FILTER]} for ${u}…`;
 
   $('#loadBtn').disabled = true;
 
@@ -101,6 +107,8 @@ async function load() {
       window.location.origin +
       '/api/analytics?username=' +
       encodeURIComponent(u) +
+      '&filter=' +
+      encodeURIComponent(GAME_FILTER) +
       '&_=' +
       Date.now();
 
@@ -128,6 +136,8 @@ async function load() {
     }
 
     DATA = d;
+
+    renderGameFilters();
 
     const t =
       d.totals;
@@ -219,7 +229,7 @@ async function load() {
       .remove('hidden');
 
     status.textContent =
-      `Loaded ${t.games.toLocaleString()} games for ${d.username}`;
+      `Loaded ${t.games.toLocaleString()} ${filterNames[GAME_FILTER]} for ${d.username}`;
 
   }
 
@@ -242,6 +252,101 @@ async function load() {
       false;
 
   }
+}
+
+
+function renderGameFilters() {
+
+  let filters =
+    document.querySelector(
+      '#gameFilters'
+    );
+
+  if (!filters) {
+
+    filters =
+      document.createElement(
+        'div'
+      );
+
+    filters.id =
+      'gameFilters';
+
+    filters.className =
+      'game-filter-bar';
+
+    const metrics =
+      $('#metrics');
+
+    metrics.parentNode.insertBefore(
+      filters,
+      metrics
+    );
+  }
+
+
+  const options = [
+    {
+      key: 'all',
+      label: 'All Games'
+    },
+    {
+      key: 'rated',
+      label: 'Rated Only'
+    },
+    {
+      key: 'unrated',
+      label: 'Unrated Only'
+    }
+  ];
+
+
+  filters.innerHTML =
+    options
+    .map(
+      option => `
+        <button
+          class="game-filter-btn ${
+            GAME_FILTER === option.key
+              ? 'active'
+              : ''
+          }"
+          data-filter="${option.key}">
+          ${option.label}
+        </button>
+      `
+    )
+    .join('');
+
+
+  filters
+    .querySelectorAll(
+      '.game-filter-btn'
+    )
+    .forEach(
+      button => {
+
+        button.addEventListener(
+          'click',
+          async () => {
+
+            const newFilter =
+              button.dataset.filter;
+
+            if (
+              newFilter === GAME_FILTER
+            ) {
+              return;
+            }
+
+            GAME_FILTER =
+              newFilter;
+
+            await load();
+          }
+        );
+      }
+    );
 }
 
 
