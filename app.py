@@ -669,7 +669,7 @@ def rating_history(rows):
 
 
 # =========================================================
-# PEAK RATING
+# PEAK RATINGS
 # =========================================================
 
 def peak_ratings(rows):
@@ -773,14 +773,8 @@ def streak_stats(rows):
                 if current > best_length:
 
                     best_length = current
-
-                    best_start = (
-                        current_start
-                    )
-
-                    best_end = (
-                        g["local_date"]
-                    )
+                    best_start = current_start
+                    best_end = g["local_date"]
 
             else:
 
@@ -853,7 +847,7 @@ def recent_form(rows):
 
 
 # =========================================================
-# RATING DIFFERENTIAL
+# RATING DIFFERENCE
 # =========================================================
 
 def rating_difference_stats(rows):
@@ -937,7 +931,7 @@ def rating_difference_stats(rows):
 
 
 # =========================================================
-# DAY OF WEEK
+# WEEKDAY
 # =========================================================
 
 def weekday_stats(rows):
@@ -1474,6 +1468,11 @@ def analytics():
         "all"
     ).strip().lower()
 
+    time_filter = request.args.get(
+        "time_classes",
+        "all"
+    ).strip().lower()
+
     if not username:
 
         return jsonify({
@@ -1491,6 +1490,38 @@ def analytics():
             "error":
                 "Invalid game filter"
         }), 400
+
+    valid_time_classes = {
+        "rapid",
+        "blitz",
+        "bullet"
+    }
+
+    selected_time_classes = None
+
+    if time_filter != "all":
+
+        selected_time_classes = {
+            x.strip()
+            for x in time_filter.split(",")
+            if x.strip()
+        }
+
+        if not selected_time_classes:
+
+            return jsonify({
+                "error":
+                    "No time controls selected"
+            }), 400
+
+        if not selected_time_classes.issubset(
+            valid_time_classes
+        ):
+
+            return jsonify({
+                "error":
+                    "Invalid time-control filter"
+            }), 400
 
     try:
 
@@ -1524,13 +1555,26 @@ def analytics():
             ]
 
         # =================================================
+        # RAPID / BLITZ / BULLET FILTER
+        # =================================================
+
+        if selected_time_classes is not None:
+
+            rows = [
+                g
+                for g in rows
+                if g["time_class"]
+                in selected_time_classes
+            ]
+
+        # =================================================
 
         if not rows:
 
             return jsonify({
                 "error":
-                    "No games found "
-                    "for that filter"
+                    "No games found for "
+                    "the selected filters"
             }), 404
 
         total_record = game_record(
@@ -1552,6 +1596,15 @@ def analytics():
 
             "filter":
                 game_filter,
+
+            "time_filter": (
+                sorted(
+                    selected_time_classes
+                )
+                if selected_time_classes
+                is not None
+                else "all"
+            ),
 
             "totals":
                 total_record,
