@@ -1,5 +1,9 @@
 let DATA = null;
+
 let GAME_FILTER = 'all';
+
+// Empty set means "All Modes"
+let TIME_FILTERS = new Set();
 
 const $ = s => document.querySelector(s);
 
@@ -53,10 +57,18 @@ function formatMonth(s) {
     s.split('-');
 
   const names = [
-    'Jan', 'Feb', 'Mar',
-    'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep',
-    'Oct', 'Nov', 'Dec'
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec'
   ];
 
   return (
@@ -75,6 +87,31 @@ function signed(n) {
 }
 
 
+function getTimeFilterText() {
+
+  if (TIME_FILTERS.size === 0) {
+    return 'All Modes';
+  }
+
+  const order = [
+    'rapid',
+    'blitz',
+    'bullet'
+  ];
+
+  return order
+    .filter(
+      x => TIME_FILTERS.has(x)
+    )
+    .map(
+      x =>
+        x.charAt(0).toUpperCase()
+        + x.slice(1)
+    )
+    .join(' + ');
+}
+
+
 async function load() {
 
   const u =
@@ -90,33 +127,63 @@ async function load() {
     return;
   }
 
-  const filterNames = {
+
+  const gameFilterNames = {
     all: 'all games',
     rated: 'rated games',
     unrated: 'unrated games'
   };
 
-  status.textContent =
-    `Loading ${filterNames[GAME_FILTER]} for ${u}…`;
 
-  $('#loadBtn').disabled = true;
+  const timeFilterText =
+    getTimeFilterText();
+
+
+  status.textContent =
+    `Loading ${gameFilterNames[GAME_FILTER]} · ${timeFilterText}…`;
+
+
+  $('#loadBtn').disabled =
+    true;
+
 
   try {
+
+    let timeParam =
+      'all';
+
+
+    if (TIME_FILTERS.size > 0) {
+
+      timeParam =
+        [...TIME_FILTERS]
+        .join(',');
+    }
+
 
     const url =
       window.location.origin +
       '/api/analytics?username=' +
       encodeURIComponent(u) +
       '&filter=' +
-      encodeURIComponent(GAME_FILTER) +
+      encodeURIComponent(
+        GAME_FILTER
+      ) +
+      '&time_classes=' +
+      encodeURIComponent(
+        timeParam
+      ) +
       '&_=' +
       Date.now();
+
 
     const r = await fetch(
       url,
       {
         method: 'GET',
+
         cache: 'no-store',
+
         headers: {
           Accept:
             'application/json'
@@ -124,8 +191,10 @@ async function load() {
       }
     );
 
+
     const d =
       await r.json();
+
 
     if (!r.ok) {
 
@@ -135,30 +204,49 @@ async function load() {
       );
     }
 
+
     DATA = d;
 
+
     renderGameFilters();
+
+    renderTimeFilters();
+
 
     const t =
       d.totals;
 
+
     $('#metrics').innerHTML =
+
       metric(
         'Games',
         t.games.toLocaleString()
-      ) +
+      )
+
+      +
+
       metric(
         'Wins',
         t.wins.toLocaleString()
-      ) +
+      )
+
+      +
+
       metric(
         'Losses',
         t.losses.toLocaleString()
-      ) +
+      )
+
+      +
+
       metric(
         'Draws',
         t.draws.toLocaleString()
-      ) +
+      )
+
+      +
+
       metric(
         'Score',
         t.score_pct + '%'
@@ -169,6 +257,7 @@ async function load() {
       d.top_opponents
       .map(
         (o, i) => `
+
           <div class="opp">
 
             <div class="rank">
@@ -182,9 +271,11 @@ async function load() {
               </div>
 
               <div class="sub">
+
                 ${o.games.toLocaleString()}
                 games · Avg
                 ${o.avg_opp_rating ?? '—'}
+
               </div>
 
             </div>
@@ -200,6 +291,7 @@ async function load() {
             </div>
 
           </div>
+
         `
       )
       .join('');
@@ -209,12 +301,14 @@ async function load() {
       d.opponents
       .map(
         o => `
+
           <option
             value="${esc(o.opponent)}">
 
             ${esc(o.opponent)}
 
           </option>
+
         `
       )
       .join('');
@@ -224,12 +318,16 @@ async function load() {
 
     renderExtraAnalytics();
 
+
     $('#content')
       .classList
-      .remove('hidden');
+      .remove(
+        'hidden'
+      );
+
 
     status.textContent =
-      `Loaded ${t.games.toLocaleString()} ${filterNames[GAME_FILTER]} for ${d.username}`;
+      `Loaded ${t.games.toLocaleString()} ${gameFilterNames[GAME_FILTER]} · ${timeFilterText} for ${d.username}`;
 
   }
 
@@ -250,7 +348,6 @@ async function load() {
 
     $('#loadBtn').disabled =
       false;
-
   }
 }
 
@@ -305,6 +402,7 @@ function renderGameFilters() {
     options
     .map(
       option => `
+
         <button
           class="game-filter-btn ${
             GAME_FILTER === option.key
@@ -312,8 +410,11 @@ function renderGameFilters() {
               : ''
           }"
           data-filter="${option.key}">
+
           ${option.label}
+
         </button>
+
       `
     )
     .join('');
@@ -350,6 +451,168 @@ function renderGameFilters() {
 }
 
 
+function renderTimeFilters() {
+
+  let filters =
+    document.querySelector(
+      '#timeFilters'
+    );
+
+
+  if (!filters) {
+
+    filters =
+      document.createElement(
+        'div'
+      );
+
+    filters.id =
+      'timeFilters';
+
+    filters.className =
+      'time-filter-bar';
+
+
+    const gameFilters =
+      $('#gameFilters');
+
+
+    gameFilters.insertAdjacentElement(
+      'afterend',
+      filters
+    );
+  }
+
+
+  const modes = [
+    {
+      key: 'rapid',
+      label: 'Rapid'
+    },
+    {
+      key: 'blitz',
+      label: 'Blitz'
+    },
+    {
+      key: 'bullet',
+      label: 'Bullet'
+    }
+  ];
+
+
+  const allActive =
+    TIME_FILTERS.size === 0;
+
+
+  filters.innerHTML = `
+
+    <button
+      class="time-filter-btn ${
+        allActive
+          ? 'active'
+          : ''
+      }"
+      data-time="all">
+
+      All Modes
+
+    </button>
+
+
+    ${modes.map(
+      mode => `
+
+        <button
+          class="time-filter-btn ${
+            TIME_FILTERS.has(
+              mode.key
+            )
+              ? 'active'
+              : ''
+          }"
+          data-time="${mode.key}">
+
+          ${mode.label}
+
+        </button>
+
+      `
+    ).join('')}
+
+  `;
+
+
+  filters
+    .querySelectorAll(
+      '.time-filter-btn'
+    )
+    .forEach(
+      button => {
+
+        button.addEventListener(
+          'click',
+          async () => {
+
+            const value =
+              button.dataset.time;
+
+
+            if (value === 'all') {
+
+              if (
+                TIME_FILTERS.size === 0
+              ) {
+                return;
+              }
+
+              TIME_FILTERS.clear();
+
+              await load();
+
+              return;
+            }
+
+
+            if (
+              TIME_FILTERS.has(
+                value
+              )
+            ) {
+
+              TIME_FILTERS.delete(
+                value
+              );
+
+            }
+
+            else {
+
+              TIME_FILTERS.add(
+                value
+              );
+
+            }
+
+
+            // Selecting all three is the same as All Modes
+            if (
+              TIME_FILTERS.size === 3
+            ) {
+
+              TIME_FILTERS.clear();
+            }
+
+
+            await load();
+
+          }
+        );
+
+      }
+    );
+}
+
+
 function renderH2H() {
 
   if (!DATA) return;
@@ -374,15 +637,18 @@ function renderH2H() {
     metric(
       'Games',
       o.games.toLocaleString()
-    ) +
+    )
+    +
     metric(
       'Record',
       o.record
-    ) +
+    )
+    +
     metric(
       'As White',
       o.white_games.toLocaleString()
-    ) +
+    )
+    +
     metric(
       'As Black',
       o.black_games.toLocaleString()
@@ -422,6 +688,7 @@ function renderH2H() {
     Object.entries(grouped)
     .map(
       ([k, v]) => `
+
         <div class="chip">
 
           ${esc(k)}
@@ -429,6 +696,7 @@ function renderH2H() {
           ${v.w}-${v.l}-${v.d}
 
         </div>
+
       `
     )
     .join('');
