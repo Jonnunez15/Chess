@@ -1,0 +1,10 @@
+{
+  "name": "Chess Analytics",
+  "short_name": "Chess Stats",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0c0f13",
+  "theme_color": "#101318",
+  "description": "Personal Chess.com matchup analytics",
+  "icons": [{"src":"/static/icons/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}

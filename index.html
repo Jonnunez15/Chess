@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#101318" />
+  <title>Chess Analytics</title>
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="stylesheet" href="/static/style.css" />
+  <link rel="apple-touch-icon" href="/static/icons/icon.svg" />
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div class="brand">♟️</div>
+      <div>
+        <h1>Chess Analytics</h1>
+        <p>Personal Chess.com matchup stats</p>
+      </div>
+    </header>
+
+    <section class="search-card">
+      <label for="username">Chess.com username</label>
+      <div class="search-row">
+        <input id="username" value="jonnunez15" autocomplete="off" />
+        <button id="loadBtn">Analyze</button>
+      </div>
+      <div id="status" class="status"></div>
+    </section>
+
+    <section id="content" class="hidden">
+      <div class="metrics" id="metrics"></div>
+
+      <div class="section-title">
+        <div><span>TOP 10</span><h2>Most-played opponents</h2></div>
+      </div>
+      <div id="opponents" class="opponent-list"></div>
+
+      <div class="section-title"><div><span>EXPLORE</span><h2>Head-to-head</h2></div></div>
+      <section class="h2h-card">
+        <select id="oppSelect"></select>
+        <div id="h2hStats" class="h2h-stats"></div>
+        <div id="timeControls" class="chips"></div>
+      </section>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+  <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js');</script>
+</body>
+</html>
