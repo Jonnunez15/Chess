@@ -12,6 +12,27 @@ HEADERS = {
     "User-Agent": "jonnunez-chess-analytics/1.0 (personal analytics app)"
 }
 
+# ---------------------------------------------------------
+# CACHE
+# ---------------------------------------------------------
+
+# One cache entry per Chess.com username.
+#
+# Structure:
+#
+# CACHE["username"] = {
+#     "archives": {
+#         "archive_url": [game, game, game...]
+#     },
+#     "last_check": timestamp
+# }
+#
+CACHE = {}
+
+# Don't hit Chess.com again if the same account was analyzed
+# within the last 60 seconds.
+CACHE_TTL = 60
+
 
 def get_json(url, retries=5):
     for attempt in range(retries):
@@ -22,14 +43,19 @@ def get_json(url, retries=5):
                 timeout=60
             )
 
-            # Chess.com rate limit
             if r.status_code == 429:
                 wait = 2 ** attempt
-                print(f"Rate limited. Waiting {wait} seconds...")
+
+                print(
+                    f"Rate limited. "
+                    f"Waiting {wait} seconds..."
+                )
+
                 time.sleep(wait)
                 continue
 
             r.raise_for_status()
+
             return r.json()
 
         except requests.RequestException as e:
@@ -37,10 +63,12 @@ def get_json(url, retries=5):
                 raise
 
             wait = 2 ** attempt
+
             print(
                 f"Request failed: {e}. "
                 f"Retrying in {wait} seconds..."
             )
+
             time.sleep(wait)
 
     return {}
@@ -57,31 +85,125 @@ def classify(me_result, opp_result):
 
 
 def load_games(username):
+    username = username.lower()
+
+    now = time.time()
+
+    # -----------------------------------------------------
+    # CREATE CACHE FOR USER IF IT DOESN'T EXIST
+    # -----------------------------------------------------
+
+    if username not in CACHE:
+        CACHE[username] = {
+            "archives": {},
+            "last_check": 0
+        }
+
+    user_cache = CACHE[username]
+
+    # -----------------------------------------------------
+    # VERY RECENT REQUEST
+    # -----------------------------------------------------
+
+    # If we just checked this account less than 60 seconds
+    # ago, don't even contact Chess.com.
+    if (
+        user_cache["archives"]
+        and now - user_cache["last_check"] < CACHE_TTL
+    ):
+        print(
+            f"Using cached games for {username}. "
+            f"No Chess.com refresh needed."
+        )
+
+        all_games = []
+
+        for games in user_cache["archives"].values():
+            all_games.extend(games)
+
+        print(
+            f"Cache contains "
+            f"{len(all_games)} games."
+        )
+
+        return all_games
+
+    # -----------------------------------------------------
+    # GET CURRENT ARCHIVE LIST
+    # -----------------------------------------------------
+
     archive_data = get_json(
         f"{BASE}/player/{username}/games/archives"
     )
 
-    archives = archive_data.get("archives", [])
+    archives = archive_data.get(
+        "archives",
+        []
+    )
 
-    print(f"Found {len(archives)} monthly archives for {username}")
+    print(
+        f"Chess.com reports "
+        f"{len(archives)} monthly archives "
+        f"for {username}"
+    )
 
-    all_games = []
+    if not archives:
+        return []
+
+    # The newest archive can change because new games
+    # continue being added during the current month.
+    latest_archive = archives[-1]
+
+    # -----------------------------------------------------
+    # LOAD ARCHIVES
+    # -----------------------------------------------------
 
     for i, url in enumerate(archives):
+        already_cached = (
+            url in user_cache["archives"]
+        )
+
+        # Every historical month is permanent.
+        # If we already have it, don't download it again.
+        #
+        # The most recent month IS refreshed so newly played
+        # games appear.
+        if (
+            already_cached
+            and url != latest_archive
+        ):
+            print(
+                f"Archive {i + 1}/{len(archives)} "
+                f"already cached"
+            )
+
+            continue
+
         try:
             data = get_json(url)
 
-            games = data.get("games", [])
-
-            all_games.extend(games)
-
-            print(
-                f"Loaded archive {i + 1}/{len(archives)} "
-                f"- {len(games)} games "
-                f"- {len(all_games)} total"
+            games = data.get(
+                "games",
+                []
             )
 
-            # Small delay to avoid hammering Chess.com API
+            user_cache["archives"][url] = games
+
+            if already_cached:
+                print(
+                    f"Refreshed latest archive "
+                    f"{i + 1}/{len(archives)} "
+                    f"- {len(games)} games"
+                )
+
+            else:
+                print(
+                    f"Downloaded archive "
+                    f"{i + 1}/{len(archives)} "
+                    f"- {len(games)} games"
+                )
+
+            # Only delay when actually downloading.
             time.sleep(0.15)
 
         except requests.RequestException as e:
@@ -89,11 +211,55 @@ def load_games(username):
                 f"Failed to load archive "
                 f"{i + 1}/{len(archives)}: {e}"
             )
+
+            # If an archive was previously cached,
+            # keep the old copy instead of losing it.
             continue
 
+    # -----------------------------------------------------
+    # REMOVE ARCHIVES CHESS.COM NO LONGER REPORTS
+    # -----------------------------------------------------
+
+    current_archive_set = set(archives)
+
+    cached_urls = list(
+        user_cache["archives"].keys()
+    )
+
+    for cached_url in cached_urls:
+        if cached_url not in current_archive_set:
+            print(
+                f"Removing obsolete archive "
+                f"from cache: {cached_url}"
+            )
+
+            del user_cache["archives"][
+                cached_url
+            ]
+
+    user_cache["last_check"] = now
+
+    # -----------------------------------------------------
+    # COMBINE EVERYTHING
+    # -----------------------------------------------------
+
+    all_games = []
+
+    for url in archives:
+        games = user_cache[
+            "archives"
+        ].get(
+            url,
+            []
+        )
+
+        all_games.extend(games)
+
     print(
-        f"Finished loading games for {username}. "
-        f"Total games: {len(all_games)}"
+        f"Finished loading games for "
+        f"{username}. "
+        f"Total cached games: "
+        f"{len(all_games)}"
     )
 
     return all_games
@@ -105,11 +271,29 @@ def normalize(games, username):
     rows = []
 
     for g in games:
-        white = g.get("white", {})
-        black = g.get("black", {})
+        white = g.get(
+            "white",
+            {}
+        )
 
-        wn = str(white.get("username", ""))
-        bn = str(black.get("username", ""))
+        black = g.get(
+            "black",
+            {}
+        )
+
+        wn = str(
+            white.get(
+                "username",
+                ""
+            )
+        )
+
+        bn = str(
+            black.get(
+                "username",
+                ""
+            )
+        )
 
         if wn.lower() == uname:
             me = white
@@ -124,13 +308,16 @@ def normalize(games, username):
         else:
             continue
 
-        ts = g.get("end_time")
+        ts = g.get(
+            "end_time"
+        )
 
         if ts:
             date = datetime.fromtimestamp(
                 ts,
                 tz=timezone.utc
             ).isoformat()
+
         else:
             date = None
 
@@ -139,26 +326,39 @@ def normalize(games, username):
                 "username",
                 "Unknown"
             ),
+
             "result": classify(
                 me.get("result"),
                 opp.get("result")
             ),
+
             "color": color,
-            "my_rating": me.get("rating"),
-            "opp_rating": opp.get("rating"),
+
+            "my_rating": me.get(
+                "rating"
+            ),
+
+            "opp_rating": opp.get(
+                "rating"
+            ),
+
             "time_class": g.get(
                 "time_class",
                 "unknown"
             ),
+
             "time_control": g.get(
                 "time_control",
                 ""
             ),
+
             "rated": g.get(
                 "rated",
                 False
             ),
+
             "date": date,
+
             "url": g.get(
                 "url",
                 ""
@@ -172,7 +372,9 @@ def summarize(rows):
     groups = defaultdict(list)
 
     for row in rows:
-        groups[row["opponent"]].append(row)
+        groups[
+            row["opponent"]
+        ].append(row)
 
     out = []
 
@@ -205,19 +407,25 @@ def summarize(rows):
 
         out.append({
             "opponent": opp,
+
             "games": n,
+
             "wins": wins,
+
             "losses": losses,
+
             "draws": draws,
-            "record": (
+
+            "record":
                 f"{wins}-"
                 f"{losses}-"
-                f"{draws}"
-            ),
+                f"{draws}",
+
             "win_pct": round(
                 100 * wins / n,
                 1
             ),
+
             "score_pct": round(
                 100
                 * (
@@ -227,6 +435,7 @@ def summarize(rows):
                 / n,
                 1
             ),
+
             "avg_opp_rating": (
                 round(
                     sum(ratings)
@@ -235,14 +444,16 @@ def summarize(rows):
                 if ratings
                 else None
             ),
+
             "white_games": sum(
                 g["color"] == "White"
                 for g in games
             ),
+
             "black_games": sum(
                 g["color"] == "Black"
                 for g in games
-            ),
+            )
         })
 
     out.sort(
@@ -267,16 +478,19 @@ def home():
 def analytics():
     username = request.args.get(
         "username",
-        "jonnunez15"
+        "jonnunez152"
     ).strip()
 
     if not username:
         return jsonify({
-            "error": "Username is required"
+            "error":
+                "Username is required"
         }), 400
 
     try:
-        games = load_games(username)
+        games = load_games(
+            username
+        )
 
         rows = normalize(
             games,
@@ -285,10 +499,9 @@ def analytics():
 
         if not rows:
             return jsonify({
-                "error": (
+                "error":
                     "No public games found "
                     "for that username"
-                )
             }), 404
 
         wins = sum(
@@ -308,16 +521,22 @@ def analytics():
 
         total = len(rows)
 
-        summary = summarize(rows)
+        summary = summarize(
+            rows
+        )
 
         return jsonify({
             "username": username,
 
             "totals": {
                 "games": total,
+
                 "wins": wins,
+
                 "losses": losses,
+
                 "draws": draws,
+
                 "score_pct": round(
                     100
                     * (
@@ -329,32 +548,32 @@ def analytics():
                 )
             },
 
-            "top_opponents": (
-                summary[:10]
-            ),
+            "top_opponents":
+                summary[:10],
 
-            "opponents": summary,
+            "opponents":
+                summary,
 
-            "games": rows
+            "games":
+                rows
         })
 
     except requests.HTTPError as e:
         return jsonify({
-            "error": (
+            "error":
                 f"Chess.com API error: {e}"
-            )
         }), 502
 
     except requests.RequestException as e:
         return jsonify({
-            "error": (
+            "error":
                 f"Network error: {e}"
-            )
         }), 502
 
     except Exception as e:
         return jsonify({
-            "error": str(e)
+            "error":
+                str(e)
         }), 500
 
 
